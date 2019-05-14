@@ -66,6 +66,7 @@ sampletimevar=time.time()
 lastencodertime=0
 accel=0
 sys=0
+mag=0
 
 print('Reading BNO055 data, press Ctrl-C to quit...')
 try:
@@ -76,7 +77,7 @@ try:
 #        if time.time()-timevar>1:
 #            print =('calibrating')
 #            timevar=time.time()
-    while sys<2.5:
+    while accel<2.5:
     
         # Read the Euler angles for heading, roll, pitch (all in degrees).
         if time.time()-sampletimevar>samplerate:
