@@ -24,8 +24,10 @@ def newfig(fig,q):
             savelist=loclist
             loclist=q.get(block=True)
         line1, = ax.plot(savelist[0],savelist[1],'-r')
-        ax.set_title(u"Z={}".format(round(savelist[2],3)))
-        plt.axis('equal')
+        line2, =ax2.plot(savelist[0],savelist[2],'-r')
+        ax.set_title('x vs y')
+        ax2.set_title('x vs z')
+        ax.axis('equal')
         
         fig.canvas.draw()
         fig.canvas.flush_events()
@@ -58,6 +60,10 @@ def readbno(q,headingoffset, samplerate):
             heading, pitch, roll = bno.read_euler()
             if abs(roll) >135:
                 heading=heading-180
+            if len(headinglist)>0 and headinglist[0]>180 and heading<90:
+                heading=heading+360
+            elif len(headinglist)>0 and headinglist[0]<180 and heading>270:
+                heading=heading-360
             headinglist.append(heading)
             rolllist.append(roll)
             pitchlist.append(pitch)
@@ -78,7 +84,7 @@ def readbno(q,headingoffset, samplerate):
              meanheading, meanroll, meanpitch))         
             
             xloccurrent=xloccurrent+distanceperencoder*math.cos(meanheading*pi/180)*math.cos(meanpitch*pi/180)
-            yloccurrent=yloccurrent+distanceperencoder*math.sin(meanheading*pi/180)*math.cos(meanpitch*pi/180)
+            yloccurrent=yloccurrent-distanceperencoder*math.sin(meanheading*pi/180)*math.cos(meanpitch*pi/180)
             zloccurrent=zloccurrent+distanceperencoder*math.sin(meanpitch*pi/180)
             print('Xloc={0:0.2F} Yloc={1:0.2F} Zloc={2:0.2F}'.format(
              xloccurrent,yloccurrent,zloccurrent))
@@ -86,7 +92,7 @@ def readbno(q,headingoffset, samplerate):
             yloclist.append(yloccurrent)
             zloclist.append(zloccurrent)
             
-            q.put([xloclist,yloclist,zloclist[-1]])
+            q.put([xloclist,yloclist,zloclist])
             
             clkLastState = clkState
             
@@ -139,10 +145,9 @@ lastencodertime=0
 
 #Create figure for plotting
 plt.ion()
-fig = plt.figure()
-ax=fig.add_subplot(111)
-#ax2=fig.add_subplot(212)
-
+fig = plt.figure(figsize=(5,8))
+ax=plt.subplot2grid((8,5),(0,0), colspan=5,rowspan=5)
+ax2=plt.subplot2grid((8,5),(6,0), colspan=5,rowspan=2)
 
 #getting calibration data from calibration file
 with open ('calibration.csv') as caldat:
@@ -216,4 +221,5 @@ finally:
     GPIO.cleanup()
     p.terminate()
     p.join()
+
 
