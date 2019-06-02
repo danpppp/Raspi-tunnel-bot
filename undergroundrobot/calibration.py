@@ -36,15 +36,24 @@ if len(sys.argv) == 2 and sys.argv[1].lower() == '-v':
             logging.basicConfig(level=logging.DEBUG)
 
     # Initialize the BNO055 and stop if something went wrong.
-if not bno.begin():
-    raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
-
+#if not bno.begin(0X0B):
+#    raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+while True:
+    try:
+        if not bno.begin(0X0B):
+            raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+        status,self_test,error = bno.get_system_status()
+        break
+    except Exception as e:
+        print("Got error: {}".format(e))
+        print("sleeping .5s before retrying")
+        time.sleep(.5)
 #calibrationdata=bno.get_calibration()
 #print(calibrationdata)
 #bno.set_calibration(calibrationdata)
 
 # Print system status and self test result.
-status, self_test, error = bno.get_system_status()
+#status, self_test, error = bno.get_system_status()
 print('System status: {0}'.format(status))
 print('Self test result (0x0F is normal): 0x{0:02X}'.format(self_test))
 
@@ -77,7 +86,7 @@ try:
 #        if time.time()-timevar>1:
 #            print =('calibrating')
 #            timevar=time.time()
-    while accel<2.5:
+    while sys<2.5 or gyro<2.5 or accel<2.5 or pitch<2.5:
     
         # Read the Euler angles for heading, roll, pitch (all in degrees).
         if time.time()-sampletimevar>samplerate:
