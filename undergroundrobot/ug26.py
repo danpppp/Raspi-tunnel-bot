@@ -139,7 +139,7 @@ def readbno(q2,headingoffset, errormeanheadingrad,errormeanpitchrad):
             stdquatx=0
             stdquaty=0
             stdquatz=0
-            q2.put([meanquat0,meanquatx,meanquaty,meanquatz,stdquat0,stdquatx,stdquaty,stdquatz])
+            q2.put([meanquat0,meanquatx,meanquaty,meanquatz,stdquat0,stdquatx,stdquaty,stdquatz,counter])
         
         
         clkLastState = clkState
@@ -187,13 +187,20 @@ def readbno(q2,headingoffset, errormeanheadingrad,errormeanpitchrad):
             meanquatx=stats.mean(quatxlist)
             meanquaty=stats.mean(quatylist)
             meanquatz=stats.mean(quatzlist)
-            stdquat0=stats.stdev(quat0list)
-            stdquatx=stats.stdev(quatxlist)
-            stdquaty=stats.stdev(quatylist)
-            stdquatz=stats.stdev(quatzlist)
+            if len(quat0list)>1:
+                stdquat0=stats.stdev(quat0list)
+                stdquatx=stats.stdev(quatxlist)
+                stdquaty=stats.stdev(quatylist)
+                stdquatz=stats.stdev(quatzlist)
+            else:
+                stdquat0=0
+                stdquatx=0
+                stdquaty=0
+                stdquatz=0
+            
             
             #Queue to Mathfun
-            q2.put([meanquat0,meanquatx,meanquaty,meanquatz,stdquat0,stdquatx,stdquaty,stdquatz])
+            q2.put([meanquat0,meanquatx,meanquaty,meanquatz,stdquat0,stdquatx,stdquaty,stdquatz,counter])
             
             #clearing lists so that they are empty for the next click
             quat0list.clear()
@@ -236,6 +243,7 @@ def mathfun(q,q2,q3,anglechangeencodercount):
     xerrortot=0
     yerrortot=0
     zerrortot=0
+    
     global headingoffset
     while True:
         
@@ -251,6 +259,10 @@ def mathfun(q,q2,q3,anglechangeencodercount):
         stdquatym=loclist2[6]
         stdquatzm=loclist2[7]
         
+        #print(loclist2)
+        
+        counter=loclist2[8]
+        
         quat0listm.append(meanquat0m)
         quatxlistm.append(meanquatxm)
         quatylistm.append(meanquatym)
@@ -260,6 +272,20 @@ def mathfun(q,q2,q3,anglechangeencodercount):
         stdquatxlist.append(stdquatxm)
         stdquatylist.append(stdquatym)
         stdquatzlist.append(stdquatzm)
+        
+        #determining if the chip is supside down
+        zxvec=2*(meanquatxm*meanquatzm+meanquatym*meanquat0m)
+        zyvec=2*(meanquatym*meanquatzm-meanquatxm*meanquat0m)
+        zzvec=1-2*(meanquatxm**2+meanquatym**2)
+        print('zx={0:0.2F} zy={1:0.2F} zz={2:0.2F}'.format(
+         zxvec,zyvec,zzvec))
+        if counter==1 and zzvec>math.sqrt(2)/2:
+            headingoffset=headingoffset-180
+            print(counter)
+            print(headingoffset)
+            print('heading switched')
+            
+        #print(counter)
         
         # using quaternion data to find the orientation of
         # the xvector as the chip rotates through space.
