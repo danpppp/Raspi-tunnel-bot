@@ -225,11 +225,20 @@ def readbno(q2,headingoffset, errormeanheadingrad,errormeanpitchrad):
 #
 #        xvecnorm=xvec*math.cos(headingoffset*pi/180)-yvec*math.sin(headingoffset*pi/180)
 #        yvecnorm=xvec*math.sin(headingoffset*pi/180)+yvec*math.cos(headingoffset*pi/180)
+#        
+#        zxvec=2*(quatx*quatz+quaty*quat0)
+#        zyvec=2*(quaty*quatz-quatx*quat0)
+#        
+#        zxvecnorm=zxvec*math.cos(headingoffset*pi/180)-zyvec*math.sin(headingoffset*pi/180)
+#        zyvecnorm=zxvec*math.sin(headingoffset*pi/180)+zyvec*math.cos(headingoffset*pi/180)
+#        
+#        zzvec=1-2*(quatx**2+quaty**2)
+#        print('zx={0:0.2F} zy={1:0.2F} zz={2:0.2F}'.format(
+#             zxvecnorm,zyvecnorm,zzvec))
 #
 #
-#
-#        print('xvec={0:0.2F} yvec={1:0.4F} zvec={2:0.2F}'.format(
-#              xvecnorm, yvecnorm, zvec))
+##        print('xvec={0:0.2F} yvec={1:0.4F} zvec={2:0.2F}'.format(
+##              xvecnorm, yvecnorm, zvec))
 #        timevar=time.time()
 
 
@@ -273,17 +282,7 @@ def mathfun(q,q2,q3,anglechangeencodercount):
         stdquatylist.append(stdquatym)
         stdquatzlist.append(stdquatzm)
         
-        #determining if the chip is supside down
-        zxvec=2*(meanquatxm*meanquatzm+meanquatym*meanquat0m)
-        zyvec=2*(meanquatym*meanquatzm-meanquatxm*meanquat0m)
-        zzvec=1-2*(meanquatxm**2+meanquatym**2)
-        print('zx={0:0.2F} zy={1:0.2F} zz={2:0.2F}'.format(
-         zxvec,zyvec,zzvec))
-        if counter==1 and zzvec>math.sqrt(2)/2:
-            headingoffset=headingoffset-180
-            print(counter)
-            print(headingoffset)
-            print('heading switched')
+        
             
         #print(counter)
         
@@ -292,11 +291,48 @@ def mathfun(q,q2,q3,anglechangeencodercount):
         xvec=1-2*(meanquatym**2+meanquatzm**2)
         yvec=2*(meanquatxm*meanquatym+meanquatzm*meanquat0m)
         zvec=2*(meanquatxm*meanquatzm-meanquatym*meanquat0m)
+        
+        
 
         # changing the heading of the chip so that it movement
         # starts in the positive x direction
         xvecnorm=xvec*math.cos(headingoffset*pi/180)-yvec*math.sin(headingoffset*pi/180)
         yvecnorm=xvec*math.sin(headingoffset*pi/180)+yvec*math.cos(headingoffset*pi/180)
+        
+        if len(quat0listm)==2:
+            angleoffset=math.atan(yvecnorm/xvecnorm)
+            headingoffset=headingoffset-angleoffset*180/pi
+            xvecnorm=xvec*math.cos(headingoffset*pi/180)-yvec*math.sin(headingoffset*pi/180)
+            yvecnorm=xvec*math.sin(headingoffset*pi/180)+yvec*math.cos(headingoffset*pi/180)
+    
+        
+        #determining if the chip is supside down
+        
+        
+        
+        if counter==1:
+            zxvec=2*(meanquatxm*meanquatzm+meanquatym*meanquat0m)
+            zyvec=2*(meanquatym*meanquatzm-meanquatxm*meanquat0m)
+            zzvec=1-2*(meanquatxm**2+meanquatym**2)
+            zxvecnorm=zxvec*math.cos(headingoffset*pi/180)-zyvec*math.sin(headingoffset*pi/180)
+            zyvecnorm=zxvec*math.sin(headingoffset*pi/180)+zyvec*math.cos(headingoffset*pi/180)
+        
+            print('zx={0:0.2F} zy={1:0.2F} zz={2:0.2F}'.format(
+             zxvecnorm,zyvecnorm,zzvec))
+##            thetayrot=math.atan(zvec/math.sqrt(xvecnorm**2+yvecnorm**2))
+##            print(thetayrot*180/pi)
+##            zzvecnorm=math.sqrt(xvecnorm**2+yvecnorm**2
+##                                )*math.sin(thetayrot)+zzvec*math.cos(
+##                                    thetayrot)
+#            print(zzvecnorm)
+            if abs(zyvecnorm)<math.sqrt(2)/2 and zzvec>0:
+                headingoffset=headingoffset-180
+                print(counter)
+                print(headingoffset)
+                print('heading switched')
+                xvecnorm=xvec*math.cos(headingoffset*pi/180)-yvec*math.sin(headingoffset*pi/180)
+                yvecnorm=xvec*math.sin(headingoffset*pi/180)+yvec*math.cos(headingoffset*pi/180)
+        
         
         # This redefines which direction is considered forward movement.
         # The purpose of this is to counter the effect when
